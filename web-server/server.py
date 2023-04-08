@@ -1,9 +1,9 @@
 from socket import socket, AF_INET, SOCK_STREAM
-from utils import convert_request_to_dict
 import datetime
 import platform
 import path
 import mimetypes
+from jinja2 import FileSystemLoader, Environment
 
 
 server = socket(AF_INET, SOCK_STREAM)
@@ -35,21 +35,6 @@ def build_headers(content_type, status):
     '\r\n'
     return header
 
-def build_body(content_type):
-    body = '<html lang="en">'\
-            '<head>'\
-            '<meta charset="UTF-8">'\
-            '<meta http-equiv="X-UA-Compatible" content="IE=edge">' \
-            '<meta name="viewport" content="width=device-width, initial-scale=1.0">' \
-            '<title>Document</title>' \
-            '</head>' \
-            '<body>' \
-            '<h1>Welcome to my web server :D </h1>' \
-            '</body>' \
-           '</html>' \
-            
-    return body            
-
 print('Your web server have started!')
 
 
@@ -70,28 +55,59 @@ def handle_request(client_requisition_socket):
     # client_requisition_socket.close()
 
 def handle_path_and_return_binary_html(url_path, client_requisition_socket):
-    print(url_path)
-    print(path.path_exists(url_path))
     if path.path_exists(url_path) and path.is_file(url_path):
         mime_type, encoding = mimetypes.guess_type(url_path)
         file_body = path.open_pathfile_and_parse_data(url_path)
         content_type = mime_type     
         status='200 OK'
-        raw_response = build_headers(content_type=content_type, status=status) + file_body
-        response = raw_response.encode()
+        raw_response = build_headers(content_type=content_type, status=status) 
+        if type(file_body) == str:
+            file_body = file_body.encode()
+        
+        response_bytes = raw_response.encode() 
+        response = response_bytes + file_body
         client_requisition_socket.send(response)
         client_requisition_socket.close()
-
-
-    # elif path.is_folder(path) and path.is_index_html_inside_folder(path):
-    #     return path.get_binary_index_html_in_current_folder(path) 
-    else:
-        content_type = 'text/plain'     
+    elif path.path_exists(url_path) and path.is_folder(url_path) and path.is_index_html_inside_folder(url_path):
+        mime_type, encoding = mimetypes.guess_type(url_path)
+        file_body = path.open_pathfile_and_parse_data(f"{url_path}/index.html")
+        content_type = mime_type     
         status='200 OK'
-        raw_response = build_headers(content_type=content_type, status=status) + "didn't work, sorry"
-        response = raw_response.encode()
+        raw_response = build_headers(content_type=content_type, status=status) 
+        if type(file_body) == str:
+            file_body = file_body.encode()
+        response_bytes = raw_response.encode() 
+        response = response_bytes + file_body
         client_requisition_socket.send(response)
         client_requisition_socket.close()
+    elif path.path_exists(url_path):
+        loader = FileSystemLoader('templates')        
+        env = Environment(loader=loader)
+        template = env.get_template('folder.html')
+        file = open('pages/folder.html', 'w')
+        render = template.render(name='Carlos is my name')
+        file.write(render)
+        file.close()     
+        
+    # if path.is_folder(url_path) and path.is_index_html_inside_folder(url_path):
+    #     mime_type, encoding = mimetypes.guess_type(url_path)
+    #     file_body = path.open_pathfile_and_parse_data(url_path)
+    #     content_type = mime_type     
+    #     status='200 OK'
+    #     raw_response = build_headers(content_type=content_type, status=status) 
+    #     if type(file_body) == str:
+    #         file_body.encode()
+        
+    #     response = raw_response.encode() + file_body
+    #     client_requisition_socket.send(response)
+    #     client_requisition_socket.close() 
+    # else:
+    #     content_type = 'text/plain'     
+    #     status='200 OK'
+    #     raw_response = build_headers(content_type=content_type, status=status) + "didn't work, sorry"
+    #     response = raw_response.encode()
+    #     client_requisition_socket.send(response)
+    #     client_requisition_socket.close()
 
 
 
