@@ -1,3 +1,5 @@
+
+
 def convert_request_to_dict(request):
     lines = request.split('\r\n')
     headers = {}
@@ -7,3 +9,5 @@ def convert_request_to_dict(request):
             headers[header] = value
     
     return headers
+
+    
