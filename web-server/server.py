@@ -81,13 +81,15 @@ def handle_path_and_return_binary_html(url_path, client_requisition_socket):
         client_requisition_socket.send(response)
         client_requisition_socket.close()
     elif path.path_exists(url_path):
-        loader = FileSystemLoader('templates')        
-        env = Environment(loader=loader)
-        template = env.get_template('folder.html')
-        file = open('pages/folder.html', 'w')
-        render = template.render(name='Carlos is my name')
-        file.write(render)
-        file.close()     
+        os_path = path.convert_to_os_path(url_path)
+        items = path.get_items_inside_folder(os_path)
+        # loader = FileSystemLoader('templates')        
+        # env = Environment(loader=loader)
+        # template = env.get_template('folder.html')
+        # file = open('pages/folder.html', 'w')
+        # render = template.render(name='Carlos is my name')
+        # file.write(render)
+        # file.close()     
         
     # if path.is_folder(url_path) and path.is_index_html_inside_folder(url_path):
     #     mime_type, encoding = mimetypes.guess_type(url_path)
